@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
  <key>NSCameraUsageDescription</key>
-    <string>This app needs camera access for liveness detection verification</string>
-    <key>NSPhotoLibraryUsageDescription</key>
-    <string>This app needs access to save liveness verification images</string>
+ <string>This app needs camera access for liveness detection</string>
+ <key>NSMicrophoneUsageDescription</key>
+ <string>This app needs microphone access for liveness detection</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>♦
 	<key>CFBundleDisplayName</key>

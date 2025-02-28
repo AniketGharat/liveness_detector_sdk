@@ -72,7 +72,8 @@ class _LivenessCameraViewState extends State<LivenessCameraView>
     try {
       print("Requesting camera permission...");
       final status = await Permission.camera.request();
-      print("Camera permission status: $status");
+      print(
+          "Camera permission status on ${Platform.isIOS ? 'iOS' : 'Android'}: $status");
 
       if (status != PermissionStatus.granted) {
         print("Camera permission not granted: $status");
@@ -84,6 +85,13 @@ class _LivenessCameraViewState extends State<LivenessCameraView>
       _cameras = await availableCameras();
       print("Available cameras: ${_cameras?.length}");
 
+      if (_cameras != null && _cameras!.isNotEmpty) {
+        for (var camera in _cameras!) {
+          print(
+              "Camera found: ${camera.name}, direction: ${camera.lensDirection}");
+        }
+      }
+
       if (_cameras == null || _cameras!.isEmpty) {
         print("No cameras available");
         _handleError("No cameras available");
@@ -92,7 +100,8 @@ class _LivenessCameraViewState extends State<LivenessCameraView>
 
       await _setupCamera();
     } catch (e) {
-      print("Camera initialization error: $e");
+      print(
+          "Camera initialization error on ${Platform.isIOS ? 'iOS' : 'Android'}: $e");
       _handleError("Failed to initialize camera: $e");
     }
   }
@@ -153,17 +162,12 @@ class _LivenessCameraViewState extends State<LivenessCameraView>
   }
 
   Future<void> _initializeCameraController(CameraDescription camera) async {
-    print(
-        "Setting up camera controller for ${camera.lensDirection.toString()}");
-
-    // Use lower resolution on iOS
+    // Use only low or medium resolution on iOS
     final resolution = Platform.isIOS
-        ? ResolutionPreset.medium
+        ? ResolutionPreset.low // Try an even lower resolution for iOS
         : (_currentResolution == ResolutionPreset.high
             ? ResolutionPreset.high
             : ResolutionPreset.medium);
-
-    print("Using resolution: $resolution");
 
     try {
       _cameraController = CameraController(
@@ -171,27 +175,18 @@ class _LivenessCameraViewState extends State<LivenessCameraView>
         resolution,
         enableAudio: false,
         imageFormatGroup: Platform.isAndroid
-            ? ImageFormatGroup.nv21 // Try changing from bgra8888 to nv21
-            : ImageFormatGroup.yuv420,
+            ? ImageFormatGroup.nv21
+            : ImageFormatGroup
+                .bgra8888, // Trying this format for iOS instead of yuv420
       );
 
-      print("Initializing camera controller...");
       await _cameraController!.initialize();
-      print("Camera controller initialized");
-
-      // Lock orientation on iOS
-      if (Platform.isIOS) {
-        print("Locking capture orientation on iOS");
-        await _cameraController!
-            .lockCaptureOrientation(DeviceOrientation.portraitUp);
-      }
 
       _livenessDetector = LivenessDetector(
         config: widget.config,
         onStateChanged: _handleStateChanged,
         isFrontCamera: _isFrontCamera,
       );
-      print("Liveness detector created");
     } catch (e) {
       print("Error during camera controller initialization: $e");
       _handleError("Camera initialization failed: $e");

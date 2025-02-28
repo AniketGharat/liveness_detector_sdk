@@ -102,10 +102,8 @@ class LivenessDetector {
       // Get proper rotation based on platform and camera direction
       final InputImageRotation rotation;
       if (Platform.isIOS) {
-        // iOS-specific rotation handling
-        rotation = isFrontCamera
-            ? InputImageRotation.rotation270deg
-            : InputImageRotation.rotation90deg;
+        // iOS-specific rotation handling - try this instead
+        rotation = InputImageRotation.rotation0deg;
       } else {
         // Android rotation handling
         rotation = isFrontCamera
@@ -116,14 +114,11 @@ class LivenessDetector {
       final metadata = InputImageMetadata(
         size: Size(image.width.toDouble(), image.height.toDouble()),
         rotation: rotation,
-        format: Platform.isAndroid
-            ? InputImageFormat.nv21 // Try changing from bgra8888 to nv21
-            : InputImageFormat.yuv420,
+        format: Platform.isIOS
+            ? InputImageFormat.bgra8888 // Try this format for iOS
+            : InputImageFormat.nv21,
         bytesPerRow: image.planes[0].bytesPerRow,
       );
-
-      print(
-          "Created image metadata with rotation: $rotation, format: ${Platform.isAndroid ? InputImageFormat.nv21 : InputImageFormat.yuv420}");
 
       return InputImage.fromBytes(
         bytes: bytes,

@@ -43,15 +43,16 @@ class _LivenessScreenState extends State<LivenessScreen> {
     setState(() => _isInitializing = true);
 
     try {
-      // First check current status
+      // First check current status with more detailed logging
       PermissionStatus status = await Permission.camera.status;
-      print("Current camera permission status: $status");
+      print(
+          "Current camera permission status on ${Platform.isIOS ? 'iOS' : 'Android'}: $status");
 
       if (status.isGranted) {
         print("Camera permission already granted");
         startLivenessDetection();
-      } else {
-        // Request permission
+      } else if (status.isDenied) {
+        // Request permission with more detailed logging
         print("Requesting camera permission...");
         status = await Permission.camera.request();
         print("Camera permission after request: $status");
@@ -59,11 +60,17 @@ class _LivenessScreenState extends State<LivenessScreen> {
         if (status.isGranted) {
           print("Camera permission granted");
           startLivenessDetection();
-        } else if (status.isPermanentlyDenied) {
-          _showOpenSettingsDialog();
         } else {
-          _showPermissionDialog();
+          print("Camera permission denied: $status");
+          if (status.isPermanentlyDenied) {
+            _showOpenSettingsDialog();
+          } else {
+            _showPermissionDialog();
+          }
         }
+      } else {
+        print("Unexpected permission status: $status");
+        _showPermissionDialog();
       }
     } catch (e) {
       print("Error requesting camera permission: $e");
